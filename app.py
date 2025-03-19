@@ -149,7 +149,7 @@ if df is not None:
             yearly_avg = national_df.groupby(['year', 'category'])['selected_rate'].mean().reset_index()
             
             # Get actual categories from the data
-            available_categories = sorted(national_df['category'].unique())
+            available_categories = national_df['category'].unique()
             
             # Create selectors for visualization - only offer categories that exist in the data
             # Default to first 3 or less if fewer are available
