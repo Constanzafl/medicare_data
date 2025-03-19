@@ -19,7 +19,7 @@ st.markdown("Analysis of procedure pricing trends by category from 2016 to 2025"
 def load_data():
     try:
         # Intenta cargar el archivo consolidado - ajusta el nombre según sea necesario
-        file_name = "hcpcs_pivoted_table.csv"
+        file_name = "hcpcs_pivoted_filtered.csv"
         
         # Para depuración, mostrar el contenido del directorio
         import os
