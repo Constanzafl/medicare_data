@@ -131,7 +131,7 @@ if df is not None:
         # Verificar cuáles categorías están realmente presentes en los datos
         if 'category' in national_df.columns:
             actual_categories = set(national_df['category'])
-            st.write("Available categories in your data:", sorted(actual_categories))
+            st.write("Available categories in your data: {df['category'].nunique()}")
             
             # Function to determine which rate to use based on category
             def select_rate(row):
