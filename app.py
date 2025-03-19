@@ -388,7 +388,7 @@ if df is not None:
         proc_df = national_df.groupby(['hcpc', 'year', 'category', 'sdesc'])['selected_rate'].mean().reset_index()
         
         # Select a category
-        available_categories = sorted(national_df['category'].unique())
+        available_categories = national_df['category'].unique()
         if not available_categories:
             st.error("No categories found in the data.")
             st.stop()
