@@ -43,7 +43,7 @@ def load_data():
                 st.write("Your columns:", df.columns.tolist())
                 st.write("Expected columns:", required_columns)
                 return None
-        st.success(f"Successfully loaded data from {file_name}")
+        #st.success(f"Successfully loaded data from {file_name}")
         return df
     except FileNotFoundError:
         st.error(f"File not found: {file_name}")
