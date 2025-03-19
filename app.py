@@ -23,10 +23,10 @@ def load_data():
         # Para depuración, mostrar el contenido del directorio
         import os
         files_in_dir = os.listdir('.')
-        st.write("Files in directory:", files_in_dir)
+        #st.write("Files in directory:", files_in_dir)
         df = pd.read_csv(file_name)
         # Mostrar las columnas para depuración
-        st.write("Columns in the dataset:", df.columns.tolist())
+        #st.write("Columns in the dataset:", df.columns.tolist())
         # Verificar si las columnas requeridas existen
         required_columns = ['year', 'hcpc', 'category', 'locality', 'modifier', 'price', 'limit_charge', 'sdesc']
         missing_columns = [col for col in required_columns if col not in df.columns]
