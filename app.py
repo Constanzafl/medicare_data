@@ -78,7 +78,7 @@ if df is not None:
         
         if 'category' in national_df.columns:
             actual_categories = set(national_df['category'])
-            st.write("Available categories in your data:", national_df['category'].dropna().nunique())
+            st.write("Available categories in your data:", national_df['category'].nunique())
             
             def select_rate(row):
                 if row['category'] in non_facility_categories:
