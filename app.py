@@ -90,6 +90,10 @@ if df is not None:
             
             national_df['selected_rate'] = national_df.apply(select_rate, axis=1)
             yearly_avg = national_df.groupby(['year', 'category'])['selected_rate'].mean().reset_index()
+            
+            # Debug: Show available years in the data
+            st.write("Years in dataset:", sorted(national_df['year'].unique()))
+            
             available_categories = national_df['category'].unique()
             default_cats = available_categories[:min(3, len(available_categories))]
             selected_categories = st.multiselect(
@@ -158,106 +162,116 @@ if df is not None:
         else:
             st.error("The 'category' column does not exist in your data. Cannot proceed with category-based analysis.")
 
-with tab3:
-    st.subheader("Category Comparison")
-    if 'category' not in df.columns:
-        st.error("The 'category' column does not exist in your data. Cannot proceed with category comparison.")
-        st.stop()
-    
-    # Same filtering for National data
-    if 'modifier' in df.columns:
-        national_df = df[(df['locality'] == 0) & (df['modifier'].isna())]
-    else:
-        national_df = df[df['locality'] == 0]
-    
-    if 'selected_rate' not in national_df.columns:
-        national_df['selected_rate'] = national_df.apply(select_rate, axis=1)
-    
-    # Get unique years from the data
-    years = sorted(national_df['year'].unique())
-    
-    if len(years) < 2:
-        st.error("Need at least 2 different years for comparison.")
-        st.stop()
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        start_year = st.selectbox("Select Start Year", options=years, index=0)
-    with col2:
-        end_year = st.selectbox("Select End Year", options=years, index=len(years)-1)
-    
-    if start_year and end_year:
-        # Filter data for selected years
-        start_data = national_df[national_df['year'] == start_year]
-        end_data = national_df[national_df['year'] == end_year]
-        
-        if start_data.empty or end_data.empty:
-            st.error(f"No data available for one of the selected years: {start_year} or {end_year}")
+    with tab3:
+        st.subheader("Category Comparison")
+        if 'category' not in df.columns:
+            st.error("The 'category' column does not exist in your data. Cannot proceed with category comparison.")
             st.stop()
         
-        # Group by category and calculate average rates
-        start_avg = start_data.groupby('category')['selected_rate'].mean().reset_index()
-        end_avg = end_data.groupby('category')['selected_rate'].mean().reset_index()
+        # Same filtering for National data
+        if 'modifier' in df.columns:
+            national_df = df[(df['locality'] == 0) & (df['modifier'].isna())]
+        else:
+            national_df = df[df['locality'] == 0]
         
-        # Merge the data
-        comparison_df = pd.merge(start_avg, end_avg, on='category', suffixes=('_start', '_end'))
+        if 'selected_rate' not in national_df.columns:
+            def select_rate(row):
+                if row['category'] in non_facility_categories:
+                    return row['price']  # Non-facility rate
+                elif row['category'] in facility_categories:
+                    return row['limit_charge']  # Facility rate
+                else:
+                    return row['price']  # Default to non-facility
+            national_df['selected_rate'] = national_df.apply(select_rate, axis=1)
         
-        if comparison_df.empty:
-            st.error("No categories found in common between the selected years.")
+        # Get unique years from the data
+        years = sorted(national_df['year'].unique())
+        
+        # Debug: Print years available
+        st.write("Available years for comparison:", years)
+        
+        if len(years) < 2:
+            st.error("Need at least 2 different years for comparison.")
             st.stop()
         
-        comparison_df['growth'] = (comparison_df['selected_rate_end'] - comparison_df['selected_rate_start']) / comparison_df['selected_rate_start'] * 100
-        comparison_df = comparison_df.sort_values('growth', ascending=False)
+        col1, col2 = st.columns(2)
+        with col1:
+            start_year = st.selectbox("Select Start Year", options=years, index=0)
+        with col2:
+            end_year = st.selectbox("Select End Year", options=years, index=len(years)-1)
         
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
-        fig.add_trace(
-            go.Bar(
-                x=comparison_df['category'],
-                y=comparison_df['selected_rate_start'],
-                name=f'{start_year} Rate',
-                marker_color='lightblue'
+        if start_year and end_year:
+            # Filter data for selected years
+            start_data = national_df[national_df['year'] == start_year]
+            end_data = national_df[national_df['year'] == end_year]
+            
+            if start_data.empty or end_data.empty:
+                st.error(f"No data available for one of the selected years: {start_year} or {end_year}")
+                st.stop()
+            
+            # Group by category and calculate average rates
+            start_avg = start_data.groupby('category')['selected_rate'].mean().reset_index()
+            end_avg = end_data.groupby('category')['selected_rate'].mean().reset_index()
+            
+            # Merge the data
+            comparison_df = pd.merge(start_avg, end_avg, on='category', suffixes=('_start', '_end'))
+            
+            if comparison_df.empty:
+                st.error("No categories found in common between the selected years.")
+                st.stop()
+            
+            comparison_df['growth'] = (comparison_df['selected_rate_end'] - comparison_df['selected_rate_start']) / comparison_df['selected_rate_start'] * 100
+            comparison_df = comparison_df.sort_values('growth', ascending=False)
+            
+            fig = make_subplots(specs=[[{"secondary_y": True}]])
+            fig.add_trace(
+                go.Bar(
+                    x=comparison_df['category'],
+                    y=comparison_df['selected_rate_start'],
+                    name=f'{start_year} Rate',
+                    marker_color='lightblue'
+                )
             )
-        )
-        fig.add_trace(
-            go.Bar(
-                x=comparison_df['category'],
-                y=comparison_df['selected_rate_end'],
-                name=f'{end_year} Rate',
-                marker_color='darkblue'
+            fig.add_trace(
+                go.Bar(
+                    x=comparison_df['category'],
+                    y=comparison_df['selected_rate_end'],
+                    name=f'{end_year} Rate',
+                    marker_color='darkblue'
+                )
             )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=comparison_df['category'],
-                y=comparison_df['growth'],
-                name='Growth %',
-                line=dict(color='red', width=2),
-                mode='lines+markers'
-            ),
-            secondary_y=True
-        )
-        fig.update_layout(
-            title=f"Rate Comparison by Category: {start_year} vs {end_year}",
-            xaxis=dict(title='Category', tickangle=45),
-            yaxis=dict(title='Average Rate ($)'),
-            yaxis2=dict(title='Growth (%)', range=[min(comparison_df['growth'])-10, max(comparison_df['growth'])+10]),
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            height=700,
-            barmode='group'
-        )
-        st.plotly_chart(fig, use_container_width=True)
-        
-        st.subheader(f"Category Rate Comparison: {start_year} vs {end_year}")
-        comparison_display = comparison_df.copy()
-        comparison_display = comparison_display.rename(columns={
-            'selected_rate_start': f'{start_year} Avg Rate',
-            'selected_rate_end': f'{end_year} Avg Rate',
-            'growth': 'Growth (%)'
-        })
-        comparison_display[f'{start_year} Avg Rate'] = comparison_display[f'{start_year} Avg Rate'].round(2)
-        comparison_display[f'{end_year} Avg Rate'] = comparison_display[f'{end_year} Avg Rate'].round(2)
-        comparison_display['Growth (%)'] = comparison_display['Growth (%)'].round(2)
-        st.dataframe(comparison_display, use_container_width=True)
+            fig.add_trace(
+                go.Scatter(
+                    x=comparison_df['category'],
+                    y=comparison_df['growth'],
+                    name='Growth %',
+                    line=dict(color='red', width=2),
+                    mode='lines+markers'
+                ),
+                secondary_y=True
+            )
+            fig.update_layout(
+                title=f"Rate Comparison by Category: {start_year} vs {end_year}",
+                xaxis=dict(title='Category', tickangle=45),
+                yaxis=dict(title='Average Rate ($)'),
+                yaxis2=dict(title='Growth (%)', range=[min(comparison_df['growth'])-10, max(comparison_df['growth'])+10]),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                height=700,
+                barmode='group'
+            )
+            st.plotly_chart(fig, use_container_width=True)
+            
+            st.subheader(f"Category Rate Comparison: {start_year} vs {end_year}")
+            comparison_display = comparison_df.copy()
+            comparison_display = comparison_display.rename(columns={
+                'selected_rate_start': f'{start_year} Avg Rate',
+                'selected_rate_end': f'{end_year} Avg Rate',
+                'growth': 'Growth (%)'
+            })
+            comparison_display[f'{start_year} Avg Rate'] = comparison_display[f'{start_year} Avg Rate'].round(2)
+            comparison_display[f'{end_year} Avg Rate'] = comparison_display[f'{end_year} Avg Rate'].round(2)
+            comparison_display['Growth (%)'] = comparison_display['Growth (%)'].round(2)
+            st.dataframe(comparison_display, use_container_width=True)
 
     with tab4:
         st.subheader("Procedure-Level Analysis")
@@ -273,6 +287,13 @@ with tab3:
             national_df = df[df['locality'] == 0]
         
         if 'selected_rate' not in national_df.columns:
+            def select_rate(row):
+                if row['category'] in non_facility_categories:
+                    return row['price']  # Non-facility rate
+                elif row['category'] in facility_categories:
+                    return row['limit_charge']  # Facility rate
+                else:
+                    return row['price']  # Default to non-facility
             national_df['selected_rate'] = national_df.apply(select_rate, axis=1)
         
         if 'sdesc' not in national_df.columns:
@@ -294,6 +315,9 @@ with tab3:
         if category_procs.empty:
             st.warning(f"No procedures found for category: {selected_category}")
             st.stop()
+        
+        # Debug: Display available years for the selected category
+        st.write(f"Years available for {selected_category}:", sorted(category_procs['year'].unique()))
         
         proc_codes = sorted(category_procs['hcpc'].unique())
         
