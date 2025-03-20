@@ -59,6 +59,7 @@ def load_data():
 # Load the data
 df = load_data()
 
+
 if df is not None:
     # Display basic information about the dataset
     st.subheader("Dataset Overview")
