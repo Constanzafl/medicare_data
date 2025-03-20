@@ -118,8 +118,8 @@ if df is not None:
                 st.plotly_chart(fig, use_container_width=True)
                 
                 st.subheader("Rate Growth Analysis")
-                min_year = df['year'].min()
-                max_year = df['year'].max()
+                min_year = filtered_data['year'].min()
+                max_year = filtered_data['year'].max()
                 growth_data = []
                 for category in selected_categories:
                     category_data = filtered_data[filtered_data['category'] == category]
