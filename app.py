@@ -366,23 +366,7 @@ with tab3:
                 st.dataframe(growth_df, use_container_width=True)
         else:
             st.info("Please select at least one procedure to display trends.")
-else:
-    st.error("Failed to load data. Please check the file path and format.")
-    st.subheader("Troubleshooting Suggestions")
-    st.markdown("""
-    1. Verify that the CSV file exists in the same directory as this app.
-    2. Check that the file is named exactly 'hcpcs_pivoted_table.csv' (or update the code to match your filename).
-    3. Ensure the CSV file has the required columns:
-       - year
-       - hcpc
-       - category
-       - locality
-       - price
-       - limit_charge
-       - modifier (optional)
-       - sdesc (optional)
-    4. Check for any special characters or encoding issues in your CSV file.
-    """)
+ 
 
 # Add information about data filtering
 st.sidebar.title("Analysis Parameters")
