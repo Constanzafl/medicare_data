@@ -61,7 +61,7 @@ if df is not None:
         st.subheader("Rate Trends Analysis (2016-2025)")
         # Filter for National rates (MAC Locality = 0) 
         if 'modifier' in df.columns:
-            national_df = df[(df['locality'] == 0) & (df['modifier'].isna())]
+            national_df = df[(df['locality'] == 0)]# & (df['modifier'].isna())]
         else:
             national_df = df[df['locality'] == 0]
             st.warning("'modifier' column not found. Proceeding without filtering modifiers.")
