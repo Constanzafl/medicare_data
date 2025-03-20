@@ -170,7 +170,7 @@ if df is not None:
         
         # Same filtering for National data
         if 'modifier' in df.columns:
-            national_df = df[(df['locality'] == 0) & (df['modifier'].isna())]
+            national_df = df[(df['locality'] == 0) ]#& (df['modifier'].isna())]
         else:
             national_df = df[df['locality'] == 0]
         
