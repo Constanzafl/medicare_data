@@ -28,7 +28,7 @@ def load_data():
             return None
         
         # Eliminar filas con valores NaN en 'category'
-        df = df.dropna(subset=['category'])
+        #df = df.dropna(subset=['category'])
         
         # Convertir la columna 'year' a entero
         df['year'] = df['year'].astype(int)
@@ -78,7 +78,7 @@ if df is not None:
         
         if 'category' in national_df.columns:
             actual_categories = set(national_df['category'])
-            st.write("Available categories in your data:", national_df['category'].nunique())
+            st.write("Available categories in your data:", national_df['category'].dropna().nunique())
             
             def select_rate(row):
                 if row['category'] in non_facility_categories:
